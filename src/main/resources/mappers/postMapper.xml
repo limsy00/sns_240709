@@ -9,4 +9,5 @@
  		FROM
  			`post`
  	</select>
+ 	
  </mapper>
