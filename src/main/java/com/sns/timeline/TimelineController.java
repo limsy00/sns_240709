@@ -18,7 +18,7 @@ public class TimelineController {
 	
 	@GetMapping("/timeline/timeline-view")
 	public String timelineView(Model model) {
-		List<PostEntity> postList = postBO.getPostEntityList(); // json으로 풀기:getPostEntityList()
+		List<PostEntity> postList = postBO.getPostEntityList();
 		
 		model.addAttribute("postList", postList);
 		

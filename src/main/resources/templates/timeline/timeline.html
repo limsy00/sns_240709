@@ -11,9 +11,15 @@
 			
 			<div class="d-flex justify-content-between">
 				<div class="file-upload d-flex">
-					<img width="35" src="https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-image-512.png">
+					<!-- file 태그를 숨겨두고 이미지를 클릭하면 파일을 클릭한 것과 같은 효과를 준다. -->
+					<input type="file" id="file" accept=".jpg, .png, .gif" class="d-none">
+				
+					<!-- 이미지에 마우스 올리면 마우스 커서가 link로 변경 -->
+					<a href="#" id="fileUploadBtn"><img width="35" src="https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-image-512.png"></a>
+					
+					<div id="fileName" class="ml-2"></div>
 				</div>
-				<button id="writeBtn" class="btn btn-info">게시</button>
+				<button id="writeBtn" class="btn btn-info">업로드</button>
 			</div>
 		</div>
 		
@@ -70,7 +76,7 @@
 					<!-- 댓글 쓰기 -->
 					<div class="comment-write d-flex border-top mt-2">
 						<input type="text" class="comment-input form-control border-0 mr-2" placeholder="댓글 달기">
-						<button type="button" class="comment-btn btn btn-light">게시</button>
+						<button type="button" class="comment-btn btn btn-light" th:data-post-id="${post.id}" th:data-user-id="${post.userId}">게시</button>
 					</div>
 				</div> <!-- 댓글 끝 -->
 			</div> <!-- 카드 끝 -->
@@ -81,7 +87,154 @@
 <th:block layout:fragment="script">
     <script>
 		$(document).ready(function() {
+			// ●이미지 a태그 클릭 => 숨겨져 있는 id="file" 태그 동작시킴
+			$("#fileUploadBtn").on('click', function(e) {
+				e.preventDefault(); // 위로 올라가는 현상 방지
+				//alert("클릭");
+				$("#file").click(); // input type="file" 클릭
+			}); // --- 이미지 그림 클릭 끝
 			
-		});
+			// 파일이 선택될 때, 1.유효성 체크  2.파일명 노출
+			$("#file").on('change', function(e) {
+				// 취소를 누를 때 처리(파일이 비워지므로 .name에서 에러 발생)
+				let file = e.target.files[0];
+				if (file == null) {
+					$("#file").val("");
+					$("#fileName").text("");
+					return;
+				}
+				
+				//alert("이미지 선택");
+				let fileName = e.target.files[0].name; // leaves-8724660_640.jpg
+				console.log(fileName);
+				
+				// 1. 확장자 validation
+				let ext = fileName.split(".").pop().toLowerCase();
+				console.log(ext);
+				
+				if (ext != "gif" && ext != "png" && ext != "jpg") {
+					alert("이미지 파일만 업로드 할 수 있습니다.");
+					$("#file").val(""); // 파일 태그에 올라온 것 제거(보이지 않지만 꼭! 처리)
+					$("#fileName").text(""); // 보여지고 있는 파일명 초기화
+					return;
+				}
+				
+				// 2. 파일명 노출
+				$("#fileName").text(fileName);
+			}); // --- 파일 선택시 이벤트 끝
+			
+			
+			
+			// ●글쓰기
+			$("#writeBtn").on('click', function() {
+				//alert("게시 버튼");
+				
+				// 내용 비필수
+				let content = $('#writeTextArea').val();
+				console.log(content);
+				
+				// 이미지 필수
+				let file = $('#file').val();
+				if (file == '') {
+					alert('파일을 업로드 해주세요');
+					return;
+				}
+				
+				// 파일이 업로드 된 경우 확장자 체크
+				let ext = file.split('.').pop().toLowerCase(); // 파일 경로를 .으로 나누고 확장자가 있는 마지막 문자열을 가져온 후 모두 소문자로 변경
+				if ($.inArray(ext, ['gif', 'png', 'jpg', 'jpeg']) == -1) {
+					alert("gif, png, jpg, jpeg 파일만 업로드 할 수 있습니다.");
+					$('#file').val(''); // 파일을 비운다.
+					return;
+				}
+				
+				// 폼태그를 자바스크립트에서 만든다.
+				let formData = new FormData();
+				formData.append("content", content);
+				formData.append("file", $('#file')[0].files[0]); // $('#file')[0]은 첫번째 input file 태그를 의미, files[0]는 업로드된 첫번째 파일
+				
+				// AJAX form 데이터 전송
+				$.ajax({
+					// request
+					type: "post"
+					, url: "/post/create"
+					, data: formData
+					, enctype: "multipart/form-data"    // 파일 업로드를 위한 필수 설정
+					, processData: false    // 파일 업로드를 위한 필수 설정
+					, contentType: false    // 파일 업로드를 위한 필수 설정
+					
+					// response
+					, success: function(data) {
+						if (data.code == 200) {
+							location.reload();
+						} else if (data.code == 403) { // 비로그인 일 때
+							location.href = "/user/sign-in-view";
+						} else {
+							alert(data.error_message);
+						}
+					}
+					, error: function(e) {
+						alert("글 저장에 실패했습니다. 관리자에게 문의해주세요.");
+					}
+				});  // --- ajax 끝
+			}); // --- 글쓰기 이벤트 끝
+			
+			
+			
+			// ●댓글쓰기
+			$(".comment-btn").on('click', function() {
+				//alert("댓글게시");
+				
+				let userId = $(this).data("user-id"); // 로그인 여부
+				if (!userId) { // 비로그인
+					alert("로그인을 해주세요.");
+					location.href = "/user/sign-in-view";
+					return;
+				}
+				
+				let postId = $(this).data("post-id"); // 글 번호 꺼내오기 : data-post-id="${}"
+				//alert(postId);
+				
+				/* // 1) 이전 태그 값 가져오기 : this: 클릭된 게시 버튼
+				let content = $(this).prev().val().trim();
+				console.log(content); */
+				
+				// 2) 형제 태그 중 input값 가져오기
+				let content = $(this).siblings("input").val().trim(); // comment-input
+				console.log(content);
+				
+				if (!content) {
+					alert("댓글 내용을 입력하세요.");
+					return;
+				}
+				
+				// ajax
+				$.ajax({
+					// request
+					type:"post"
+					, url:"/comment/create"
+					, data:{"postId":postId, "content":content}
+					
+					// response
+					, success:function(data) {
+						if (data.code == 200) {
+							location.reload(true); 
+						} else if (data.code == 403) { // 비로그인
+							alert(data.error_message);
+							location.href="/user/sign-in-view";
+						} else {
+							alert(data.error_message);
+						}
+					}
+					, error:function(error) {
+						alert("댓글 쓰기에 실패했습니다.");
+					}
+					
+				}); // --- ajax 끝
+				
+			}); // --- 댓글쓰기 이벤트 끝
+			
+			
+		}); // --- ready 끝
     </script>
 </th:block>
