@@ -50,6 +50,10 @@ public class TimelineBO {
 			// 댓글 카드에 넣기
 			card.setCommentList(commentViewList);
 			
+			// 좋아요 개수
+			
+			// 좋아요 여부 채우기
+			
 			// 반드시 (card-보라색) cardViewList 에 넣기★★★
 			cardViewList.add(card);
 		}
