@@ -19,7 +19,7 @@
 					
 					<div id="fileName" class="ml-2"></div>
 				</div>
-				<button id="writeBtn" class="btn btn-info">업로드</button>
+				<button id="writeBtn" class="btn btn-info">게시</button>
 			</div>
 		</div>
 		
@@ -27,20 +27,20 @@
 		<div class="timeline-box my-5">
 			
 			<!-- 글(카드) 반복 -->
-			<div th:each="post : ${postList}" class="card border rounded mt-3">
+			<div th:each="cardView : ${cardViewList}" class="card border rounded mt-3">
 				<!-- 글쓴이, 더보기(삭제) -->
 				<div class="p-2 d-flex justify-content-between">
-					<span class="font-weight-bold" th:text="${post.userId}">글쓴이</span>
+					<span class="font-weight-bold" th:text="${cardView.user?.loginId}">글쓴이</span>
 					
 					<!-- 더보기 ...(로그인 된 사람과 글쓴이 정보 일치할 때 보이게) -->
-					<a th:if="${session.userId == post.userId}" href="#" class="more-btn">
+					<a th:if="${session.userId == cardView.post.userId}" href="#" class="more-btn">
 						<img src="https://www.iconninja.com/files/860/824/939/more-icon.png" width="30">
 					</a>
 				</div>
 				
 				<!-- 본문 이미지 -->
 				<div class="card-img">
-					<img th:src="${post.imagePath}" class="w-100" alt="본문 이미지">
+					<img th:src="${cardView.post.imagePath}" class="w-100" alt="본문 이미지">
 				</div>
 				
 				<!-- 좋아요 -->
@@ -51,8 +51,8 @@
 				
 				<!-- 글 -->
 				<div class="card-post m-3">
-					<span class="font-weight-bold" th:text="${post.userId}">글쓴이</span>
-					<span th:text="${post.content}">글 내용입니다!!!!</span>
+					<span class="font-weight-bold" th:text="${cardView.post.userId}">글쓴이</span>
+					<span th:text="${cardView.post.content}">글 내용입니다!!!!</span>
 				</div>
 				
 				<!-- 댓글 제목 -->
@@ -63,12 +63,12 @@
 				<!-- 댓글 목록 -->
 				<div class="card-comment-list m-2">
 					<!-- 댓글들 -->
-					<div class="card-comment m-1">
-						<span class="font-weight-bold">댓글쓰니</span>
-						<span>댓글 내용임</span>
+					<div class="card-comment m-1" th:each="commentView : ${cardView.commentList}">
+						<span class="font-weight-bold" th:text="${commentView.user.loginId}">댓글쓰니</span>
+						<span th:text="${commentView.comment.content}">댓글 내용임</span>
 						
 						<!-- 댓글 삭제(자신의 댓글만 가능) -->
-						<a href="#" class="comment-del-btn">
+						<a href="#" class="comment-del-btn" th:if="${session.userId == commentView.comment.userId}" th:data-comment-id="${commentView.comment.id}">
 							<img src="https://www.iconninja.com/files/603/22/506/x-icon.png" width="10" height="10">
 						</a>
 					</div>
@@ -76,7 +76,7 @@
 					<!-- 댓글 쓰기 -->
 					<div class="comment-write d-flex border-top mt-2">
 						<input type="text" class="comment-input form-control border-0 mr-2" placeholder="댓글 달기">
-						<button type="button" class="comment-btn btn btn-light" th:data-post-id="${post.id}" th:data-user-id="${post.userId}">게시</button>
+						<button type="button" class="comment-btn btn btn-light" th:data-post-id="${cardView.post.id}" th:data-user-id="${session.userId}">게시</button>
 					</div>
 				</div> <!-- 댓글 끝 -->
 			</div> <!-- 카드 끝 -->
@@ -92,7 +92,7 @@
 				e.preventDefault(); // 위로 올라가는 현상 방지
 				//alert("클릭");
 				$("#file").click(); // input type="file" 클릭
-			}); // --- 이미지 그림 클릭 끝
+			});
 			
 			// 파일이 선택될 때, 1.유효성 체크  2.파일명 노출
 			$("#file").on('change', function(e) {
@@ -121,9 +121,7 @@
 				
 				// 2. 파일명 노출
 				$("#fileName").text(fileName);
-			}); // --- 파일 선택시 이벤트 끝
-			
-			
+			});
 			
 			// ●글쓰기
 			$("#writeBtn").on('click', function() {
@@ -177,30 +175,27 @@
 						alert("글 저장에 실패했습니다. 관리자에게 문의해주세요.");
 					}
 				});  // --- ajax 끝
-			}); // --- 글쓰기 이벤트 끝
+			});
 			
-			
-			
-			// ●댓글쓰기
+			// ●댓글 쓰기
 			$(".comment-btn").on('click', function() {
-				//alert("댓글게시");
-				
-				let userId = $(this).data("user-id"); // 로그인 여부
-				if (!userId) { // 비로그인
+				let userId = $(this).data("user-id");
+				if (!userId) {
+					// 비로그인
 					alert("로그인을 해주세요.");
 					location.href = "/user/sign-in-view";
 					return;
 				}
 				
-				let postId = $(this).data("post-id"); // 글 번호 꺼내오기 : data-post-id="${}"
+				let postId = $(this).data("post-id"); // data-post-id="${}"
 				//alert(postId);
 				
-				/* // 1) 이전 태그 값 가져오기 : this: 클릭된 게시 버튼
+				/* 1) 이전 태그 값 가져오기 : this: 클릭된 게시 버튼
 				let content = $(this).prev().val().trim();
-				console.log(content); */
+				console.log(content); */;
 				
 				// 2) 형제 태그 중 input값 가져오기
-				let content = $(this).siblings("input").val().trim(); // comment-input
+				let content = $(this).siblings("input").val().trim();
 				console.log(content);
 				
 				if (!content) {
@@ -208,33 +203,49 @@
 					return;
 				}
 				
-				// ajax
 				$.ajax({
-					// request
 					type:"post"
 					, url:"/comment/create"
 					, data:{"postId":postId, "content":content}
-					
-					// response
 					, success:function(data) {
 						if (data.code == 200) {
-							location.reload(true); 
+							location.reload(true);
 						} else if (data.code == 403) { // 비로그인
 							alert(data.error_message);
-							location.href="/user/sign-in-view";
+							location.href = "/user/sign-in-view";
+						} else{
+							alert(data.error_message);
+						}
+					}
+					, error:function(e) {
+						alert("댓글 쓰기에 실패했습니다.");
+					}
+				});
+			});
+			
+			// ●댓글 삭제
+			$(".comment-del-btn").on('click', function(e) {
+				e.preventDefault(); // 위로 올라감 방지
+				
+				let commentId = $(this).data("comment-id");
+				//alert(commentId);
+				
+				$.ajax({
+					type:"DELETE"
+					, url:"/comment/delete"
+					, data:{"commentId":commentId}
+					, success:function(data) {
+						if (data.code == 200) {
+							location.reload(true);
 						} else {
 							alert(data.error_message);
 						}
 					}
-					, error:function(error) {
-						alert("댓글 쓰기에 실패했습니다.");
+					, error:function(request, status, error) {
+						alert("댓글 삭제 하는데 실패했습니다.");
 					}
-					
-				}); // --- ajax 끝
-				
-			}); // --- 댓글쓰기 이벤트 끝
-			
-			
-		}); // --- ready 끝
+				});
+			});
+		}); // --ready 함수 끝
     </script>
 </th:block>

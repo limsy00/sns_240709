@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
- 
- <mapper namespace="com.sns.comment.mapper.CommentMapper">
- 	<insert id="insertComment" parameterType="map">
- 		INSERT INTO `comment`
+
+<mapper namespace="com.sns.comment.mapper.CommentMapper">
+	<insert id="insertComment" parameterType="map">
+		INSERT INTO `comment`
 		(
 			`postId`
 			,`userId`
@@ -20,5 +20,39 @@
 			, NOW()
 			, NOW()
 		)
- 	</insert>
- </mapper>
+	</insert>
+	
+	<select id="selectCommentList" resultType="com.sns.comment.domain.Comment">
+		SELECT
+			`id`
+			,`postId`
+			,`userId`
+			,`content`
+			,`createdAt`
+			,`updatedAt`
+		FROM
+			`comment`
+	</select>
+	
+	<select id="selectCommentListByPostId" parameterType="int" resultType="com.sns.comment.domain.Comment">
+		SELECT
+			`id`
+			,`postId`
+			,`userId`
+			,`content`
+			,`createdAt`
+			,`updatedAt`
+		FROM
+			`comment`
+		WHERE
+			`postId` = #{postId}
+	</select>
+	
+	<delete id="deleteCommentById" parameterType="int">
+		DELETE
+		FROM	
+			`comment`
+		WHERE
+			`id` =  #{id}
+	</delete>
+</mapper>
