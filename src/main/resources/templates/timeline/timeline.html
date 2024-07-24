@@ -30,8 +30,7 @@
 			<div th:each="cardView : ${cardViewList}" class="card border rounded mt-3">
 				<!-- 글쓴이, 더보기(삭제) -->
 				<div class="p-2 d-flex justify-content-between">
-					<!-- th:text="${cardView.user?.loginId}" 에서 (?) 빼면 에러 발생-> db 문제 원래는 ? 없어도 정상적으로 작동해야함 -->
-					<span class="font-weight-bold" th:text="${cardView.user?.loginId}">글쓴이</span> 
+					<span class="font-weight-bold" th:text="${cardView.user.loginId}">글쓴이</span>
 					
 					<!-- 더보기 ...(로그인 된 사람과 글쓴이 정보 일치할 때 보이게) -->
 					<a th:if="${session.userId == cardView.post.userId}" href="#" class="more-btn">
@@ -47,15 +46,15 @@
 				<!-- 좋아요 -->
 				<div class="card-like m-3">
 					<a href="#" class="like-btn" th:data-post-id="${cardView.post.id}">
-						<img src="https://www.iconninja.com/files/214/518/441/heart-icon.png" width="18" height="18" alt="empty heart">
-						<img src="https://www.iconninja.com/files/527/809/128/heart-icon.png" width="18" height="18" alt="filled heart">
+						<img th:if="${cardView.filledLike == false}" src="https://www.iconninja.com/files/214/518/441/heart-icon.png" width="18" height="18" alt="empty heart">
+						<img th:unless="${cardView.filledLike == false}" src="https://www.iconninja.com/files/527/809/128/heart-icon.png" width="18" height="18" alt="filled heart">
 					</a>
-					<span th:text="|좋아요 13개|"></span>
+					<span th:text="|좋아요 ${cardView.likeCount}개|"></span>
 				</div>
 				
 				<!-- 글 -->
 				<div class="card-post m-3">
-					<span class="font-weight-bold" th:text="${cardView.post.userId}">글쓴이</span>
+					<span class="font-weight-bold" th:text="${cardView.user.loginId}">글쓴이</span>
 					<span th:text="${cardView.post.content}">글 내용입니다!!!!</span>
 				</div>
 				
@@ -91,7 +90,7 @@
 <th:block layout:fragment="script">
     <script>
 		$(document).ready(function() {
-			// ●이미지 a태그 클릭 => 숨겨져 있는 id="file" 태그 동작시킴
+			// 이미지 a태그 클릭 => 숨겨져 있는 id="file" 태그 동작시킴
 			$("#fileUploadBtn").on('click', function(e) {
 				e.preventDefault(); // 위로 올라가는 현상 방지
 				//alert("클릭");
@@ -127,7 +126,7 @@
 				$("#fileName").text(fileName);
 			});
 			
-			// ●글쓰기
+			// 글쓰기
 			$("#writeBtn").on('click', function() {
 				//alert("게시 버튼");
 				
@@ -181,7 +180,7 @@
 				});  // --- ajax 끝
 			});
 			
-			// ●댓글 쓰기
+			// 댓글 게시 버튼 클릭(댓글 쓰기)
 			$(".comment-btn").on('click', function() {
 				let userId = $(this).data("user-id");
 				if (!userId) {
@@ -194,9 +193,8 @@
 				let postId = $(this).data("post-id"); // data-post-id="${}"
 				//alert(postId);
 				
-				/* 1) 이전 태그 값 가져오기 : this: 클릭된 게시 버튼
-				let content = $(this).prev().val().trim();
-				console.log(content); */;
+				// 1) 이전 태그 값 가져오기
+				//let content = $(this).prev().val().trim();
 				
 				// 2) 형제 태그 중 input값 가져오기
 				let content = $(this).siblings("input").val().trim();
@@ -214,7 +212,8 @@
 					, success:function(data) {
 						if (data.code == 200) {
 							location.reload(true);
-						} else if (data.code == 403) { // 비로그인
+						} else if (data.code == 403) {
+							// 비로그인
 							alert(data.error_message);
 							location.href = "/user/sign-in-view";
 						} else{
@@ -227,7 +226,8 @@
 				});
 			});
 			
-			// ●댓글 삭제
+			// 댓글 삭제
+			// 댓글 삭제
 			$(".comment-del-btn").on('click', function(e) {
 				e.preventDefault(); // 위로 올라감 방지
 				
@@ -251,8 +251,7 @@
 				});
 			});
 			
-			
-			// ●좋아요/해제 toggle
+			// 좋아요/해제 toggle
 			$(".like-btn").on('click', function(e) {
 				e.preventDefault();
 				//alert("좋아요 토글");
@@ -277,6 +276,11 @@
 					}
 				});
 			});
+			
 		}); // --ready 함수 끝
     </script>
 </th:block>
+
+
+
+

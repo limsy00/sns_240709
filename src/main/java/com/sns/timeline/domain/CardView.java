@@ -25,6 +25,6 @@ public class CardView { // 카드 1개는 글(PostEntity), 글쓴이(UserEntity)
 	
 	// 좋아요 N개
 	private int likeCount;
-	// 좋아요 클릭 여부
-	private boolean filledLike; // 채워졌으면 홀수
+	// 좋아요를 누른지 여부
+	private boolean filledLike;  // 채워졌으면 홀수
 }

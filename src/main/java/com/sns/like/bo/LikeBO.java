@@ -19,7 +19,7 @@ public class LikeBO {
 	// output: X
 	public void likeToggle(int postId, int userId) {
 		// 조회
-		int count = likeMapper.selectLikeCountByPostIdUserId(postId, userId);
+		int count = likeMapper.selectLikeCountByPostIdOrUserId(postId, userId);
 		
 		// 삭제/추가 여부
 		if (count > 0) { // 채워져 있으면 삭제
@@ -28,4 +28,31 @@ public class LikeBO {
 			likeMapper.insertLike(postId, userId);
 		}
 	}
+
+	// input: postId, userId
+	// output: int
+	public int getLikeCountByPostIdUserId(int postId, int userId) {
+		return likeMapper.selectLikeCountByPostIdOrUserId(postId, userId);
+	}
+	
+	
+	// input: postId
+	// output: int(좋아요 개수)
+	public int getLikeCountByPostId(int postId) { // 가공 필요없이 행 갯수 리턴
+		return likeMapper.selectLikeCountByPostIdOrUserId(postId, null);
+	}
+	
+	// 좋아요 채움 여부 로직 
+	// input: postId(필수), userId(로그인/비로그인)
+	// output: boolean (채울지 여부)
+	public boolean filledLikeByPostIdUserId(int postId, Integer userId) {
+		// 1) 비로그인이면 DB 조회 없이 하트 채우지XX
+		if (userId == null) {
+			return false;
+		}
+		
+		// 로그인이면  2) 행 존재(1) true  3) 없으면(0) false
+		return likeMapper.selectLikeCountByPostIdOrUserId(postId, userId) == 1 ? true : false;
+	}
+	
 }
