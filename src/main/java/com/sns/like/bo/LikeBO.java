@@ -55,4 +55,8 @@ public class LikeBO {
 		return likeMapper.selectLikeCountByPostIdOrUserId(postId, userId) == 1 ? true : false;
 	}
 	
+	// 글번호 삭제 시, 글에 대한 모든 좋아요 삭제
+	public void deleteLikeByPostId(int postId) {
+		likeMapper.deleteLikeByPostId(postId);
+	}
 }

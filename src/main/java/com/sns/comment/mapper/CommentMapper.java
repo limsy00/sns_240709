@@ -20,6 +20,8 @@ public interface CommentMapper {
 	public List<Comment> selectCommentListByPostId(int postId); 
 	
 	public void deleteCommentById(int id); // 댓삭
+	
+	public void deleteCommentsByPostId(int postId); // 글 삭제시 (글 번호에 대하여) 모든 댓글 삭제
 }
 
 

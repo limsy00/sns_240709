@@ -55,4 +55,9 @@ public class CommentBO {
 	public void deleteCommentById(int id) {
 		commentMapper.deleteCommentById(id);
 	}
+	
+	// 글 삭제시 (글 번호에 대하여) 모든 댓글 삭제
+	public void deleteCommentsByPostId(int postId) {
+		commentMapper.deleteCommentsByPostId(postId);
+	}
 }

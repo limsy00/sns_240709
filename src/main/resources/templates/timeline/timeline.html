@@ -33,7 +33,7 @@
 					<span class="font-weight-bold" th:text="${cardView.user.loginId}">글쓴이</span>
 					
 					<!-- 더보기 ...(로그인 된 사람과 글쓴이 정보 일치할 때 보이게) -->
-					<a th:if="${session.userId == cardView.post.userId}" href="#" class="more-btn">
+					<a th:if="${session.userId == cardView.post.userId}" href="#" class="more-btn" th:data-post-id="${cardView.post.id}" data-toggle="modal" data-target="#modal">
 						<img src="https://www.iconninja.com/files/860/824/939/more-icon.png" width="30">
 					</a>
 				</div>
@@ -84,7 +84,22 @@
 				</div> <!-- 댓글 끝 -->
 			</div> <!-- 카드 끝 -->
 		</div> <!-- 타임라인 박스 끝 -->
-	</div>
+		
+		<!-- Modal : 타임리프 레이아웃 때문에 section 태그 안쪽에 위치★★★-->
+		<div class="modal fade" id="modal">
+		  <div class="modal-dialog modal-sm modal-dialog-centered"><!-- modal-sm: 작은 모달창, modal-dialog-centered: 수직 기준 가운데 정렬 -->
+		    <div class="modal-content text-center">
+				<div class="py-3"> <!-- py: 영역 넓히기 -->
+					<a href="#" id="postDeleteBtn">삭제하기</a>
+				</div>
+				<div class="py-3 border-top"><!-- border-top: 취소 위쪽에 선 생김 -->
+					<a href="#" data-dismiss="modal">취소</a> <!-- data-dismiss="modal": 모달이 닫히는 기능 -->
+				</div>
+		    </div>
+		  </div>
+		</div><!-- Modal 끝 *section 밖으로 나가면 작동X-->
+	</div><!-- contents-box 끝 -->
+	
 </section>
 
 <th:block layout:fragment="script">
@@ -227,7 +242,6 @@
 			});
 			
 			// 댓글 삭제
-			// 댓글 삭제
 			$(".comment-del-btn").on('click', function(e) {
 				e.preventDefault(); // 위로 올라감 방지
 				
@@ -273,6 +287,43 @@
 					}
 					, error:function(e){
 						alert("좋아요를 하는데 실패했습니다.");
+					}
+				});
+			});
+			
+			
+			// (●●●)더보기 a 태그 클릭 => 모달 띄우기, 모달에 글 번호 넣기
+			$(".more-btn").on('click', function(e) {
+				e.preventDefault(); // 클릭할 때, a 태그 위로 올라감 방지
+				
+				let postId = $(this).data('post-id');
+				//alert(postId);
+				
+				// 1개만 존재하는 modal을 재활용하기 위해 data-post-id를 심어놓기
+				$("#modal").data('post-id', postId); // setting 할 땐, parameter 하나 더 넣기
+				//alert($("#modal").data('post-id')); // 글 번호 뜨고-> 모달창 뜸
+			});
+			
+			// 모달 안에 있는 '삭제하기' 클릭
+			$("#postDeleteBtn").on('click', function(e) {
+				e.preventDefault(); // a 태그 위로 올라감 방지
+				let postId = $("#modal").data("post-id");
+				//alert(postId);
+				
+				// 글 삭제
+				$.ajax({
+					type:"delete"
+					, url:"/post/delete"
+					, data: {"postId":postId}
+					, success: function(data) {
+						if (data.code == 200) {
+							location.reload(true);
+						} else {
+							alert(data.error_message);
+						}
+					}
+					, error: function(e) {
+						alert("삭제하는데 실패했습니다. 관리자에게 문의해주세요.");
 					}
 				});
 			});
